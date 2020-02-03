@@ -6,6 +6,7 @@ comment.line.number-sign.shell.dockerfile
 constant.character.escape.ansi-c.shell.dockerfile
 constant.character.escape.control-char.shell.dockerfile
 constant.character.escape.hex.shell.dockerfile
+constant.character.escape.line-continuation.dockerfile
 constant.character.escape.line-continuation.shell.dockerfile
 constant.character.escape.octal.shell.dockerfile
 constant.character.escape.shell.dockerfile
@@ -34,6 +35,7 @@ keyword.control.heredoc-token.shell.dockerfile
 keyword.control.onbuild.dockerfile
 keyword.control.shell.dockerfile
 keyword.operator.arithmetic.shell.dockerfile
+keyword.operator.assignment.dockerfile
 keyword.operator.assignment.shell.dockerfile
 keyword.operator.expansion.shell.dockerfile
 keyword.operator.extglob.shell.dockerfile
@@ -61,6 +63,7 @@ keyword.other.unit.octal.shell.dockerfile
 keyword.other.unit.suffix.floating-point.shell.dockerfile
 keyword.other.unit.suffix.integer.shell.dockerfile
 meta.argument.shell.dockerfile
+meta.command.env.dockerfile
 meta.command.run.dockerfile
 meta.expression.assignment.shell.dockerfile
 meta.function.shell.dockerfile
@@ -130,6 +133,7 @@ string.quoted.single.dockerfile
 string.quoted.single.dollar.shell.dockerfile
 string.quoted.single.shell.dockerfile
 string.unquoted.argument.shell.dockerfile
+string.unquoted.dockerfile
 string.unquoted.heredoc.applescript.shell.dockerfile
 string.unquoted.heredoc.html.shell.dockerfile
 string.unquoted.heredoc.markdown.shell.dockerfile
@@ -153,6 +157,7 @@ text.html.markdown.embedded.shell.dockerfile
 text.html.textile.embedded.shell.dockerfile
 variable.language.special.shell.dockerfile
 variable.language.special.wildcard.shell.dockerfile
+variable.other.assignment.dockerfile
 variable.other.assignment.shell.dockerfile
 variable.other.dockerfile
 variable.other.loop.shell.dockerfile

@@ -45,17 +45,17 @@ require_relative './tokens.rb'
             :string_single,
             :string_double,
         ]
-        grammar[:escape] = newPattern(
+        grammar[:escape] = Pattern.new(
             match: /\\./,
             tag_as: "constant.character.escaped"
         )
         grammar[:string_single] = PatternRange.new(
             tag_as: "string.quoted.single",
-            start_pattern: newPattern(
+            start_pattern: Pattern.new(
                 match: /'/,
                 tag_as: "punctuation.definition.string.begin",
             ),
-            end_pattern: newPattern(
+            end_pattern: Pattern.new(
                 match: /'/,
                 tag_as: "punctuation.definition.string.end",
             ),
@@ -63,11 +63,11 @@ require_relative './tokens.rb'
         )
         grammar[:string_double] = PatternRange.new(
             tag_as: "string.quoted.double",
-            start_pattern: newPattern(
+            start_pattern: Pattern.new(
                 match: /"/,
                 tag_as: "punctuation.definition.string.begin",
             ),
-            end_pattern: newPattern(
+            end_pattern: Pattern.new(
                 match: /"/,
                 tag_as: "punctuation.definition.string.end",
             ),
@@ -76,7 +76,7 @@ require_relative './tokens.rb'
     # 
     # Comment
     # 
-        grammar[:comments] = newPattern(
+        grammar[:comments] = Pattern.new(
             /^\s*+/.then(
                 match: /#/,
                 tag_as: "comment.line.number-sign punctuation.definition.comment",
@@ -88,8 +88,8 @@ require_relative './tokens.rb'
     # 
     # variable
     # 
-        grammar[:variable] = newPattern(
-            newPattern(
+        grammar[:variable] = Pattern.new(
+            Pattern.new(
                 match: /\$/,
                 tag_as: "punctuation.definition.variable variable.other"
             ).then(
@@ -101,11 +101,12 @@ require_relative './tokens.rb'
     # Normal Commands 
     # 
         grammar[:commands] = [
+            :env_statement,
             :run_statement,
             :from_statement,
-            newPattern(
+            Pattern.new(
                 /^\s*+/.maybe(
-                    newPattern(
+                    Pattern.new(
                         match: /(?i:ONBUILD)/,
                         tag_as: "keyword.control.onbuild",
                     ).then(/\s++/)
@@ -124,21 +125,21 @@ require_relative './tokens.rb'
             # syntax=docker.io/docker/dockerfile:1
             # syntax=docker/dockerfile:1.0.0-experimental
             # syntax=example.com/user/repo:tag@sha256:abcdef...
-        grammar[:from_statement] = newPattern(
-            newPattern(
+        grammar[:from_statement] = Pattern.new(
+            Pattern.new(
                 match: /(?i:FROM)/,
                 tag_as: "keyword.other.special-method.from"
             ).then(/\s+/).then(
                 match: /[^\s]+/,
                 includes: [
                     # tag the image
-                    newPattern(
+                    Pattern.new(
                         match: /[^:@]+/,
                         tag_as: "entity.name.image"
                     ),
                     # tag the version
-                    newPattern(
-                        newPattern(
+                    Pattern.new(
+                        Pattern.new(
                             match: /\:/,
                             tag_as: "punctuation.separator.version constant.numeric.version",
                         ).then(
@@ -147,8 +148,8 @@ require_relative './tokens.rb'
                         )
                     ),
                     # tag the digest
-                    newPattern(
-                        newPattern(
+                    Pattern.new(
+                        Pattern.new(
                             match: /\@/,
                             tag_as: "punctuation.separator.version constant.constant.language.symbol.digest",
                         ).then(
@@ -182,8 +183,8 @@ require_relative './tokens.rb'
         
         grammar[:run_statement] = PatternRange.new(
             tag_content_as: "meta.command.run",
-            start_pattern: newPattern(
-                newPattern(
+            start_pattern: Pattern.new(
+                Pattern.new(
                     match: variableBounds(/RUN/),
                     tag_as: "keyword.other.special-method",
                 # look to make sure the line gets extended at the end with a \
@@ -194,6 +195,92 @@ require_relative './tokens.rb'
             end_pattern: lookBehindFor(/[^\\]\n/),
             includes: [
                 :shell
+            ]
+        )
+    # 
+    # ENV
+    # 
+        grammar[:env_statement] = PatternRange.new(
+            tag_content_as: "meta.command.env",
+            # ENV myName="John Doe" myDog=Rex\ The\ Dog \
+            #     myCat=fluffy
+            # ENV myName John Doe
+            # ENV myDog Rex The Dog
+            # ENV myCat fluffy
+            start_pattern: Pattern.new(
+                Pattern.new(
+                    match: variableBounds(/ENV/),
+                    tag_as: "keyword.other.special-method",
+                # look to make sure the line gets extended at the end with a \
+                )
+            ),
+            # while the line is beging extended with \
+            # while: lookAheadFor(/^.+\\$/),
+            end_pattern: lookBehindFor(/[^\\]\n/),
+            includes: [
+                # this covers:
+                #   ENV myName John Doe
+                #   ENV myDog Rex The Dog
+                #   ENV myCat fluffy
+                Pattern.new(
+                    lookBehindFor(/ENV/).then(/\s+/).then(
+                        match: /\w+/,
+                        tag_as: "variable.other.assignment",
+                    ).then(/ +/).then(
+                        match: /.+/,
+                        tag_as: "string.unquoted",
+                    )
+                ),
+                # this covers:
+                #    myName=
+                Pattern.new(
+                    Pattern.new(
+                        match: /\w+?/.lookAheadFor(/=/),
+                        tag_as: "variable.other.assignment",
+                    ).then(
+                        match: /\=/,
+                        tag_as: "keyword.operator.assignment",
+                    )
+                ),
+                # this covers
+                #    myName='thing'
+                PatternRange.new(
+                    tag_as: "string.quoted.single",
+                    start_pattern: lookBehindFor(/=/).then(
+                        match: /'/,
+                        tag_as: "punctuation.definition.string.begin",
+                    ),
+                    end_pattern: Pattern.new(
+                        match: /'/,
+                        tag_as: "punctuation.definition.string.end",
+                    ),
+                    includes: [ :escape, :variable ]
+                ),
+                # this covers
+                #    myName="thing"
+                PatternRange.new(
+                    tag_as: "string.quoted.double",
+                    start_pattern: lookBehindFor(/=/).then(
+                        match: /"/,
+                        tag_as: "punctuation.definition.string.begin",
+                    ),
+                    end_pattern: Pattern.new(
+                        match: /"/,
+                        tag_as: "punctuation.definition.string.end",
+                    ),
+                    includes: [ :escape, :variable ]
+                ),
+                # this covers
+                #    myDog=Rex\ The\ Dog
+                lookBehindFor(/=/).then(
+                    match: /(?:\\\s|[^\s])+/,
+                    tag_as: "string.unquoted",
+                ),
+                # this is for the \ on line continuations
+                Pattern.new(
+                    match: /\\\n/,
+                    tag_as: "constant.character.escape.line-continuation"
+                )
             ]
         )
  
