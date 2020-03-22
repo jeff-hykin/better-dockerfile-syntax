@@ -175,8 +175,8 @@ require_relative './tokens.rb'
     #         
         # pull in the entire shell syntax
         grammar[:shell] = JSON.parse(IO.read(PathFor[:jsonSyntax]["shell"]))
-        # allow the command call to have a word infront of it
-        grammar[:shell]["repository"]["command_call"]["begin"] = "(?<=(?:^|;|\\||&|!|\\(|\\{|\\`|\\A|\\G))\\s*+(?!function\\W|function\\$|select\\W|select\\$|case\\W|case\\$|do\\W|do\\$|done\\W|done\\$|elif\\W|elif\\$|else\\W|else\\$|esac\\W|esac\\$|fi\\W|fi\\$|for\\W|for\\$|if\\W|if\\$|in\\W|in\\$|then\\W|then\\$|until\\W|until\\$|while\\W|while\\$|alias\\W|alias\\$|bg\\W|bg\\$|command\\W|command\\$|false\\W|false\\$|fc\\W|fc\\$|fg\\W|fg\\$|getopts\\W|getopts\\$|hash\\W|hash\\$|jobs\\W|jobs\\$|kill\\W|kill\\$|newgrp\\W|newgrp\\$|read\\W|read\\$|true\\W|true\\$|umask\\W|umask\\$|unalias\\W|unalias\\$|wait\\W|wait\\$)"
+        # allow the command call to have CMD or RUN infront of it
+        grammar[:shell]["repository"]["command_call"]["begin"] = "(?<=(?:^|;|\\||&|!|\\(|\\{|\\`|RUN|CMD))\\s*+(?!function\\W|function\\$|export\\W|export\\$|select\\W|select\\$|case\\W|case\\$|do\\W|do\\$|done\\W|done\\$|elif\\W|elif\\$|else\\W|else\\$|esac\\W|esac\\$|fi\\W|fi\\$|for\\W|for\\$|if\\W|if\\$|in\\W|in\\$|then\\W|then\\$|until\\W|until\\$|while\\W|while\\$)"
         # tell the shell syntax when it needs to end
         grammar[:shell]["patterns"][0]["end"] = lookBehindFor(/[^\\]\n/)
         

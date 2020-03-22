@@ -361,7 +361,16 @@
     "logical_expression_context": {
       "patterns": [
         {
+          "include": "#regex_comparison"
+        },
+        {
           "include": "#logical-expression"
+        },
+        {
+          "include": "#logical_expression_single"
+        },
+        {
+          "include": "#logical_expression_double"
         },
         {
           "include": "#comment"
@@ -1555,10 +1564,6 @@
         {
           "match": "(?<=^|;|&|\\s)(?::|\\.)(?=\\s|;|&|$)",
           "name": "support.function.builtin.shell"
-        },
-        {
-          "match": "(?<=^|;|&|\\s)(?:alias|bg|bind|break|builtin|caller|cd|command|compgen|complete|dirs|disown|echo|enable|eval|exec|exit|false|fc|fg|getopts|hash|help|history|jobs|kill|let|logout|popd|printf|pushd|pwd|read|readonly|set|shift|shopt|source|suspend|test|times|trap|true|type|ulimit|umask|unalias|unset|wait)(?=\\s|;|&|$)",
-          "name": "support.function.builtin.shell"
         }
       ]
     },
@@ -1581,16 +1586,19 @@
     },
     "assignment": {
       "name": "meta.expression.assignment.shell",
-      "begin": "\\s*+((?:^|\\b)[a-zA-Z_][a-zA-Z0-9_]*+(?:\\b|$))(\\=)",
+      "begin": "\\s*+((?:^|\\b)[a-zA-Z_][a-zA-Z0-9_]*+(?:\\b|$))(?:(\\=)|(\\+\\=))",
       "beginCaptures": {
         "1": {
           "name": "variable.other.assignment.shell"
         },
         "2": {
           "name": "keyword.operator.assignment.shell"
+        },
+        "3": {
+          "name": "keyword.operator.assignment.compound.shell"
         }
       },
-      "end": "(?:(?:(?:(?:(;)|(&&))|(\\|\\|))|(&))|\\n)",
+      "end": "(?:(?:(?:(?:(?:(;)|(&&))|(\\|\\|))|(&))|\\n)|(?= ))",
       "endCaptures": {
         "1": {
           "name": "punctuation.terminator.statement.semicolon.shell"
@@ -1616,6 +1624,9 @@
       "begin": "\\s*+(?!(?:!|%|&|\\||\\(|\\{|\\[|<|>|#|\\n|$|;))",
       "end": "(?:(?=\\s)|(?=;|\\||&|$|\\n|\\)|\\`|\\}|\\{|#|\\])(?<!\\\\))",
       "patterns": [
+        {
+          "include": "#custom_commands"
+        },
         {
           "include": "#command_context"
         }
@@ -1663,9 +1674,20 @@
         }
       ]
     },
+    "simple_options": {
+      "match": "(?:\\s++(\\-)(\\w+))*",
+      "captures": {
+        "1": {
+          "name": "string.unquoted.argument.shell constant.other.option.dash.shell"
+        },
+        "2": {
+          "name": "string.unquoted.argument.shell constant.other.option.shell"
+        }
+      }
+    },
     "command_call": {
       "name": "meta.statement.shell",
-      "begin": "(?<=(?:^|;|\\||&|!|\\(|\\{|\\`))\\s*+(?!function\\W|function\\$|select\\W|select\\$|case\\W|case\\$|do\\W|do\\$|done\\W|done\\$|elif\\W|elif\\$|else\\W|else\\$|esac\\W|esac\\$|fi\\W|fi\\$|for\\W|for\\$|if\\W|if\\$|in\\W|in\\$|then\\W|then\\$|until\\W|until\\$|while\\W|while\\$|alias\\W|alias\\$|bg\\W|bg\\$|command\\W|command\\$|false\\W|false\\$|fc\\W|fc\\$|fg\\W|fg\\$|getopts\\W|getopts\\$|hash\\W|hash\\$|jobs\\W|jobs\\$|kill\\W|kill\\$|newgrp\\W|newgrp\\$|read\\W|read\\$|true\\W|true\\$|umask\\W|umask\\$|unalias\\W|unalias\\$|wait\\W|wait\\$)",
+      "begin": "(?<=(?:^|;|\\||&|!|\\(|\\{|\\`))\\s*+(?!function\\W|function\\$|export\\W|export\\$|select\\W|select\\$|case\\W|case\\$|do\\W|do\\$|done\\W|done\\$|elif\\W|elif\\$|else\\W|else\\$|esac\\W|esac\\$|fi\\W|fi\\$|for\\W|for\\$|if\\W|if\\$|in\\W|in\\$|then\\W|then\\$|until\\W|until\\$|while\\W|while\\$)",
       "end": "(?=;|\\||&|$|\\n|\\)|\\`|\\}|\\{|#|\\])(?<!\\\\)",
       "patterns": [
         {
@@ -1682,15 +1704,76 @@
         }
       ]
     },
-    "logical_expression": {
+    "sed_command": {
+      "match": "(\\bsed\\b)(?:\\s++(\\-)(\\w+))*\\s+('s\\/)(.*)(\\/)(.*)(\\/\\w{0,4}\\')(.*)",
+      "captures": {
+        "1": {
+          "name": "support.function.builtin.shell"
+        },
+        "2": {
+          "name": "string.unquoted.argument.shell constant.other.option.dash.shell"
+        },
+        "3": {
+          "name": "string.unquoted.argument.shell constant.other.option.shell"
+        },
+        "4": {
+          "name": "punctuation.section.regexp.shell"
+        },
+        "5": {
+          "patterns": [
+            {
+              "include": "#regexp"
+            }
+          ]
+        },
+        "6": {
+          "name": "punctuation.section.regexp.shell"
+        },
+        "7": {
+          "patterns": [
+            {
+              "include": "#string"
+            }
+          ]
+        },
+        "8": {
+          "name": "punctuation.section.regexp.shell"
+        },
+        "9": {
+          "patterns": [
+            {
+              "include": "#option"
+            },
+            {
+              "include": "#argument"
+            },
+            {
+              "include": "#command_context"
+            }
+          ]
+        }
+      }
+    },
+    "custom_commands": {
+      "patterns": [
+        {
+          "include": "#sed_command"
+        },
+        {
+          "match": "(?<=^|;|&|\\s)(?:alias|bg|bind|break|builtin|caller|cd|command|compgen|complete|dirs|disown|echo|enable|eval|exec|exit|false|fc|fg|getopts|hash|help|history|jobs|kill|let|logout|popd|printf|pushd|pwd|read|readonly|set|shift|shopt|source|suspend|test|times|trap|true|type|ulimit|umask|unalias|unset|wait)(?=\\s|;|&|$)",
+          "name": "support.function.builtin.shell"
+        }
+      ]
+    },
+    "logical_expression_single": {
       "name": "meta.scope.logical-expression.shell",
-      "begin": "(\\[{1,2})",
+      "begin": "(\\[)",
       "beginCaptures": {
         "1": {
           "name": "punctuation.definition.logical-expression.shell"
         }
       },
-      "end": "(\\]{1,2})",
+      "end": "(\\])",
       "endCaptures": {
         "1": {
           "name": "punctuation.definition.logical-expression.shell"
@@ -1698,7 +1781,16 @@
       },
       "patterns": [
         {
+          "include": "#regex_comparison"
+        },
+        {
           "include": "#logical-expression"
+        },
+        {
+          "include": "#logical_expression_single"
+        },
+        {
+          "include": "#logical_expression_double"
         },
         {
           "include": "#comment"
@@ -1741,10 +1833,96 @@
         }
       ]
     },
+    "logical_expression_double": {
+      "name": "meta.scope.logical-expression.shell",
+      "begin": "(\\[\\[)",
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.definition.logical-expression.shell"
+        }
+      },
+      "end": "(\\]\\])",
+      "endCaptures": {
+        "1": {
+          "name": "punctuation.definition.logical-expression.shell"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#regex_comparison"
+        },
+        {
+          "include": "#logical-expression"
+        },
+        {
+          "include": "#logical_expression_single"
+        },
+        {
+          "include": "#logical_expression_double"
+        },
+        {
+          "include": "#comment"
+        },
+        {
+          "include": "#boolean"
+        },
+        {
+          "include": "#numeric_constant"
+        },
+        {
+          "include": "#pipeline"
+        },
+        {
+          "include": "#statement_seperator"
+        },
+        {
+          "include": "#string"
+        },
+        {
+          "include": "#variable"
+        },
+        {
+          "include": "#interpolation"
+        },
+        {
+          "include": "#heredoc"
+        },
+        {
+          "include": "#herestring"
+        },
+        {
+          "include": "#pathname"
+        },
+        {
+          "include": "#keyword"
+        },
+        {
+          "include": "#support"
+        }
+      ]
+    },
+    "regex_comparison": {
+      "match": "(\\=~)\\s+([^ ]*)",
+      "captures": {
+        "1": {
+          "name": "keyword.operator.logical.shell"
+        },
+        "2": {
+          "patterns": [
+            {
+              "include": "#variable"
+            },
+            {
+              "include": "#regexp"
+            }
+          ]
+        }
+      }
+    },
     "variable": {
       "patterns": [
         {
-          "match": "(\\$)(\\@)",
+          "match": "(\\$)(\\@(?=\\W))",
           "captures": {
             "1": {
               "name": "punctuation.definition.variable.shell variable.parameter.positional.all.shell"
@@ -1755,7 +1933,7 @@
           }
         },
         {
-          "match": "(\\$)([0-9])",
+          "match": "(\\$)([0-9](?=\\W))",
           "captures": {
             "1": {
               "name": "punctuation.definition.variable.shell variable.parameter.positional.shell"
@@ -1766,7 +1944,7 @@
           }
         },
         {
-          "match": "(\\$)(\\{[0-9]+\\})",
+          "match": "(\\$)(\\{[0-9]+\\}(?=\\W))",
           "captures": {
             "1": {
               "name": "punctuation.definition.variable.shell variable.parameter.positional.shell"
@@ -1777,7 +1955,7 @@
           }
         },
         {
-          "match": "(\\$)([-*#?$!0_])",
+          "match": "(\\$)([-*#?$!0_](?=\\W))",
           "captures": {
             "1": {
               "name": "punctuation.definition.variable.shell variable.language.special.shell"
@@ -1828,7 +2006,7 @@
           ]
         },
         {
-          "match": "(\\$)(\\w+)",
+          "match": "(\\$)(\\w+(?=\\W))",
           "captures": {
             "1": {
               "name": "punctuation.definition.variable.shell variable.other.normal.shell"
@@ -1837,6 +2015,164 @@
               "name": "variable.other.normal.shell"
             }
           }
+        }
+      ]
+    },
+    "regexp": {
+      "patterns": [
+        {
+          "name": "keyword.control.anchor.regexp.shell",
+          "match": "\\\\[bB]|\\^|\\$"
+        },
+        {
+          "match": "\\\\[1-9]\\d*|\\\\k<([a-zA-Z_$][\\w$]*)>",
+          "captures": {
+            "0": {
+              "name": "keyword.other.back-reference.regexp.shell"
+            },
+            "1": {
+              "name": "variable.other.regexp.shell"
+            }
+          }
+        },
+        {
+          "name": "keyword.operator.quantifier.regexp.shell",
+          "match": "[?+*]|\\{(\\d+,\\d+|\\d+,|,\\d+|\\d+)\\}\\??"
+        },
+        {
+          "name": "keyword.operator.or.regexp.shell",
+          "match": "\\|"
+        },
+        {
+          "name": "meta.group.assertion.regexp.shell",
+          "begin": "(\\()((\\?=)|(\\?!)|(\\?<=)|(\\?<!))",
+          "beginCaptures": {
+            "1": {
+              "name": "punctuation.definition.group.regexp.shell"
+            },
+            "2": {
+              "name": "punctuation.definition.group.assertion.regexp.shell"
+            },
+            "3": {
+              "name": "meta.assertion.look-ahead.regexp.shell"
+            },
+            "4": {
+              "name": "meta.assertion.negative-look-ahead.regexp.shell"
+            },
+            "5": {
+              "name": "meta.assertion.look-behind.regexp.shell"
+            },
+            "6": {
+              "name": "meta.assertion.negative-look-behind.regexp.shell"
+            }
+          },
+          "end": "(\\))",
+          "endCaptures": {
+            "1": {
+              "name": "punctuation.definition.group.regexp.shell"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#regexp"
+            }
+          ]
+        },
+        {
+          "name": "meta.group.regexp.shell",
+          "begin": "\\((?:(\\?:)|(?:\\?<([a-zA-Z_$][\\w$]*)>))?",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.group.regexp.shell"
+            },
+            "1": {
+              "name": "punctuation.definition.group.no-capture.regexp.shell"
+            },
+            "2": {
+              "name": "variable.other.regexp.shell"
+            }
+          },
+          "end": "\\)",
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.group.regexp.shell"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#regexp"
+            }
+          ]
+        },
+        {
+          "name": "constant.other.character-class.set.regexp.shell",
+          "begin": "(\\[)(\\^)?",
+          "beginCaptures": {
+            "1": {
+              "name": "punctuation.definition.character-class.regexp.shell"
+            },
+            "2": {
+              "name": "keyword.operator.negation.regexp.shell"
+            }
+          },
+          "end": "(\\])",
+          "endCaptures": {
+            "1": {
+              "name": "punctuation.definition.character-class.regexp.shell"
+            }
+          },
+          "patterns": [
+            {
+              "name": "constant.other.character-class.range.regexp.shell",
+              "match": "(?:.|(\\\\(?:[0-7]{3}|x[0-9A-Fa-f]{2}|u[0-9A-Fa-f]{4}))|(\\\\c[A-Z])|(\\\\.))\\-(?:[^\\]\\\\]|(\\\\(?:[0-7]{3}|x[0-9A-Fa-f]{2}|u[0-9A-Fa-f]{4}))|(\\\\c[A-Z])|(\\\\.))",
+              "captures": {
+                "1": {
+                  "name": "constant.character.numeric.regexp.shell"
+                },
+                "2": {
+                  "name": "constant.character.control.regexp.shell"
+                },
+                "3": {
+                  "name": "constant.character.escape.backslash.regexp.shell"
+                },
+                "4": {
+                  "name": "constant.character.numeric.regexp.shell"
+                },
+                "5": {
+                  "name": "constant.character.control.regexp.shell"
+                },
+                "6": {
+                  "name": "constant.character.escape.backslash.regexp.shell"
+                }
+              }
+            },
+            {
+              "include": "#regex-character-class"
+            }
+          ]
+        },
+        {
+          "include": "#regex-character-class"
+        }
+      ]
+    },
+    "regex_character_class": {
+      "patterns": [
+        {
+          "name": "constant.other.character-class.regexp.shell",
+          "match": "\\\\[wWsSdDtrnvf]|\\."
+        },
+        {
+          "name": "constant.character.numeric.regexp.shell",
+          "match": "\\\\([0-7]{3}|x[0-9A-Fa-f]{2}|u[0-9A-Fa-f]{4})"
+        },
+        {
+          "name": "constant.character.control.regexp.shell",
+          "match": "\\\\c[A-Z]"
+        },
+        {
+          "name": "constant.character.escape.backslash.regexp.shell",
+          "match": "\\\\."
         }
       ]
     },
@@ -1858,7 +2194,10 @@
           "include": "#statement_seperator"
         },
         {
-          "include": "#logical_expression"
+          "include": "#logical_expression_double"
+        },
+        {
+          "include": "#logical_expression_single"
         },
         {
           "include": "#compound-command"
